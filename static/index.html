@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7fb">
+  <title>Document RAG Assistant</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="/"><span class="brand-icon">D</span><span>Document <b>RAG</b></span></a>
+      <span class="status"><i></i> Private session</span>
+    </header>
+
+    <section class="intro">
+      <div class="eyebrow">YOUR DOCUMENTS, ANSWERED</div>
+      <h1>Ask your documents<br><span>anything.</span></h1>
+      <p>Upload PDFs or text files and get answers grounded in their content, with source citations.</p>
+    </section>
+
+    <section class="workspace">
+      <aside class="panel setup">
+        <div class="section-heading"><span class="step">01</span><div><h2>Set up your session</h2><p>Choose a Groq model and add your key.</p></div></div>
+        <label for="model">Groq model</label>
+        <select id="model"><option value="openai/gpt-oss-120b">GPT OSS 120B · best answers</option><option value="openai/gpt-oss-20b">GPT OSS 20B · faster</option></select>
+        <label for="api-key">Groq API key <span class="optional">optional if set in .env</span></label>
+        <input id="api-key" type="password" placeholder="gsk_…" autocomplete="off">
+        <div class="key-note">Your key stays in this browser tab and is sent only to this app.</div>
+
+        <div class="divider"></div>
+        <div class="section-heading"><span class="step">02</span><div><h2>Add documents</h2><p>PDF and TXT · up to 100 MB per upload</p></div></div>
+        <label class="dropzone" for="files"><span class="upload-icon">↑</span><b>Choose files</b><span>or drag and drop them here</span><input id="files" type="file" accept=".pdf,.txt,application/pdf,text/plain" multiple></label>
+        <div id="file-list" class="file-list"></div>
+        <button id="process" class="button primary" disabled>Process documents <span>→</span></button>
+        <div id="upload-status" class="notice" aria-live="polite"></div>
+
+        <div class="divider"></div>
+        <div class="document-heading"><h3>Persistent vector database</h3><button id="delete-database" class="text-button danger" type="button">Delete all data</button></div>
+        <div id="document-list" class="document-list empty">No documents processed yet.</div>
+        <button id="clear" class="text-button" type="button">Clear chat</button>
+        <button id="export" class="text-button export" type="button" hidden>Download chat history ↓</button>
+      </aside>
+
+      <section class="panel chat-panel">
+        <div class="chat-heading"><div><span class="step">03</span><h2>Chat with your documents</h2></div><span id="chat-state" class="chat-state">Upload documents to begin</span></div>
+        <div id="messages" class="messages" aria-live="polite">
+          <div class="welcome"><div class="sparkle">✳</div><h3>Your conversation starts here</h3><p>Process a document, then ask about its key points, facts, or recommendations.</p></div>
+        </div>
+        <form id="chat-form" class="chat-form">
+          <textarea id="question" rows="1" placeholder="Ask a question about your documents…" maxlength="8000" disabled></textarea>
+          <button id="send" type="submit" aria-label="Send question" disabled>↑</button>
+          <div class="form-hint">Answers are generated from your uploaded documents.</div>
+        </form>
+      </section>
+    </section>
+    <footer>Powered by <b>Groq</b> · Search and embeddings stay on this machine</footer>
+  </main>
+  <script src="/static/app.js?v=4" defer></script>
+</body>
+</html>

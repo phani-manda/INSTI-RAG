@@ -1,300 +1,117 @@
-# 📄 Document RAG Assistant
+# Document RAG Assistant
 
-> Transform any document into an interactive AI conversation using RAG (Retrieval Augmented Generation)
+Ask questions about PDF and text documents with Groq-powered answers, local vector search, and source citations. FastAPI serves both the web interface and API.
 
-![Python](https://img.shields.io/badge/python-v3.11+-blue.svg)
-![Streamlit](https://img.shields.io/badge/streamlit-v1.32+-red.svg)
-![LangChain](https://img.shields.io/badge/langchain-latest-green.svg)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-[![Issues](https://img.shields.io/github/issues/ZohaibCodez/document-qa-rag-system.svg)](https://github.com/ZohaibCodez/document-qa-rag-system/issues)
-![Last Commit](https://img.shields.io/github/last-commit/ZohaibCodez/document-qa-rag-system)
-[![Live Demo](https://img.shields.io/badge/demo-online-green.svg)](https://document-rag-system.streamlit.app)
+## Features
 
-## 🎯 Overview
+- Upload and index multiple PDF and TXT files in one session.
+- Ask follow-up questions about the indexed documents.
+- Receive answers with source file and PDF page references.
+- Choose between Groq's GPT OSS 120B and GPT OSS 20B models.
+- Export chat history and start a clean session.
+- Store document chunks and embeddings in a persistent local Chroma vector database.
+- Add files over multiple uploads; indexed documents remain available after restarts.
+- Delete all stored documents and embeddings from the interface.
 
-Document RAG Assistant is a Streamlit web application that enables you to have intelligent conversations with your document content. Simply upload a PDF or text file, and the app will process the document to create a searchable knowledge base that you can query using natural language.
+## Run on your laptop
 
-## 🌐 Live Demo
+Choose either Docker (the same steps on Windows, macOS, and Linux) or a local Python install. Both approaches need internet access for Groq and for Chroma to download its local embedding model the first time a document is indexed.
 
-Try it out here: [Document RAG Assistant Live Demo](https://document-rag-system.streamlit.app)
+### Option A: Docker (same on Windows, macOS, and Linux)
 
-## ✨ Features
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Windows/macOS) or Docker Engine with the Compose plugin (Linux), then start Docker.
+2. Clone this repository and enter its folder:
 
-- 📁 **Multi-format Support**: Process PDF and text files seamlessly
-- 🤖 **Multiple AI Models**: Support for various Google Gemini models (2.5 Pro, Flash, 2.0 Flash, etc.)
-- 💬 **Interactive Chat**: Natural language conversation with document content
-- 🔍 **Smart Search**: Vector-based similarity search using FAISS
-- 📊 **Session Management**: Chat history, export functionality, and session persistence
-- 🎨 **Modern UI**: Clean, responsive Streamlit interface with real-time updates
-- 📈 **Progress Tracking**: Visual feedback during document processing
-- 🔄 **Streaming Responses**: Real-time AI response streaming with typing indicators
-- 🛡️ **Fallback System**: Automatic HuggingFace embeddings if Google quota exceeded
+   ```bash
+   git clone https://github.com/ZohaibCodez/document-qa-rag-system.git
+   cd document-qa-rag-system
+   ```
 
-## 🛠️ Tech Stack
+3. Copy `.env.example` to `.env` and edit `.env`, replacing the placeholder with a key from [Groq Console](https://console.groq.com/keys):
 
-- **Frontend**: Streamlit
-- **AI/ML**: Google Gemini API, LangChain
-- **Vector Store**: FAISS (Facebook AI Similarity Search)
-- **Embeddings**: Google Generative AI Embeddings
-- **Document Processing**: PyPDFLoader, TextLoader
-- **Environment**: Python 3.11+, Docker support
+   ```env
+   GROQ_API_KEY=gsk_your_real_key_here
+   CHROMA_DB_PATH=./chroma_db
+   ```
 
-## 📋 Prerequisites
+   PowerShell copy command: `Copy-Item .env.example .env`. macOS/Linux: `cp .env.example .env`.
+4. Build and start the app:
 
-- Python 3.11 or higher
-- Google Gemini API Key ([Get one here](https://makersuite.google.com/app/apikey))
-- Internet connection for API access
+   ```bash
+   docker compose up --build
+   ```
 
-## 🚀 Quick Start
+5. Open [http://localhost:8000](http://localhost:8000). Keep the terminal open while using the app; press `Ctrl+C` to stop it. Start it again later with `docker compose up`.
 
-### 1. Clone the Repository
+Docker Compose stores the vector database in the project’s `chroma_db/` directory, so indexed documents remain available across restarts and container rebuilds. To update the app, run `git pull` and then `docker compose up --build`.
+
+### Option B: Run with Python
+
+Install Python 3.12 or newer, clone the repository as shown above, and run the commands for your operating system from the project folder.
+
+Create and activate a virtual environment:
+
+**Windows PowerShell**
+
+```powershell
+py -3.12 -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+If PowerShell blocks activation, use Command Prompt instead: `.venv\Scripts\activate.bat`.
+
+**macOS / Linux**
 
 ```bash
-git clone https://github.com/ZohaibCodez/document-qa-rag-system.git
-cd document-qa-rag-system
+python3.12 -m venv .venv
+source .venv/bin/activate
 ```
 
-### 2. Install Dependencies
+Install dependencies, create `.env` from the example, and start the server:
 
 ```bash
-uv sync
+python -m pip install -r requirements.txt
 ```
 
-### 3. Set Up Environment
+Copy `.env.example` to `.env` (use the platform-specific copy command above) and set `GROQ_API_KEY` to your key. Then run:
 
 ```bash
-uv venv
-# Edit .env and add your Google API key
+python -m uvicorn app:app --reload
 ```
 
-### 4. Run the Application
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000). Keep the terminal open while using the app; press `Ctrl+C` to stop it. The first indexing run downloads Chroma's ONNX MiniLM embedding model (about 79 MB); later runs use the local copy.
+
+### Troubleshooting
+
+- **`uv` is not recognized:** `uv` is optional. Use the Python/pip commands above, or install uv using its [official installation guide](https://docs.astral.sh/uv/getting-started/installation/) before using `uv sync` and `uv run uvicorn app:app --reload`.
+- **Port 8000 is already in use:** stop the other process or start on another port with `python -m uvicorn app:app --reload --port 8001`, then open `http://127.0.0.1:8001`.
+- **Groq key errors:** check that `.env` contains `GROQ_API_KEY=...` with a valid key. The key entered in the app UI is kept only in that browser tab's session storage.
+- **Document indexing is slow the first time:** wait for the local embedding model download to finish. Later indexing runs reuse it.
+- **PowerShell blocks environment activation:** run `.venv\Scripts\Activate.ps1` from Command Prompt as `.venv\Scripts\activate.bat`, or use Docker instead.
+
+## API
+
+- `GET /api/health` reports app status and available model IDs.
+- `POST /api/upload` accepts `session_id` and one or more `files` as multipart form fields.
+- `GET /api/documents` lists persistent files and indexed chunk counts.
+- `POST /api/chat` accepts `session_id`, `question`, `model`, and optional `api_key` as JSON.
+- `POST /api/clear` clears an in-memory session.
+- `DELETE /api/database` removes all stored document chunks and embeddings after confirmation.
+- `GET /api/export/{session_id}` returns the session's chat history as JSON.
+- Interactive OpenAPI docs are available at `/docs`.
+
+Chat history is held in server memory and clears on restart. The Chroma collection persists in `chroma_db/`. For multiple app workers or hosts, point them at a shared Chroma server instead of opening the local database directory from multiple processes.
+
+## Docker
 
 ```bash
-streamlit run app.py
+docker compose up --build
 ```
 
-### 5. Access the App
+Set `GROQ_API_KEY` in `.env` before starting. The app will be available at `http://localhost:8000`.
 
-Open your browser and navigate to `http://localhost:8501`
+## Current limits
 
-## 🔧 Configuration
-
-### Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-GOOGLE_API_KEY=your_google_gemini_api_key_here
-```
-
-Alternatively, you can enter your API key directly in the app's sidebar.
-
-### Supported Models
-
-- `gemini-2.5-pro` (Most capable, recommended for complex analysis)
-- `gemini-2.5-flash` (Balanced performance and speed)
-- `gemini-2.5-flash-lite` (Lightweight and fast)
-- `gemini-2.0-flash` (Fast responses, good accuracy)
-- `gemini-1.5-pro` (Reliable baseline)
-- `gemini-1.5-flash` (Quick processing)
-
-### Configurable Parameters
-
-```python
-CHUNK_SIZE = 1000          # Text chunk size for processing
-CHUNK_OVERLAP = 100        # Overlap between chunks for context
-RETRIEVER_K = 4           # Number of similar chunks to retrieve
-EMBEDDING_MODEL = "models/gemini-embedding-exp-03-07"
-```
-
-## 📱 How to Use
-
-1. **Enter API Key**: Add your Google Gemini API key in the sidebar
-2. **Upload Document**: Click "📁 Upload your document" and select a PDF or TXT file
-3. **Process Document**: Click "🚀 Process Document" to extract and index the content
-4. **Start Chatting**: Ask questions about the document content in natural language
-5. **Export Chat**: Download your conversation history anytime using the sidebar
-
-### Supported File Formats
-
-- **PDF**: `.pdf` files (text-based, not scanned images)
-- **Text**: `.txt` files (plain text documents)
-- **Size Limit**: Up to 100MB (recommended: <10MB for optimal performance)
-
-### Example Queries
-
-- "What is the main topic of this document?"
-- "Summarize the key findings in chapter 3"
-- "What does the author say about machine learning?"
-- "List all the recommendations mentioned"
-- "Explain the methodology used in this research"
-
-## ⚠️ Current Limitations
-
-- **File Types**: Currently supports only PDF and TXT formats
-- **Language**: Optimized for English documents
-- **Processing Time**: Large documents (>50 pages) may take longer to process
-- **API Limits**: Subject to Google Gemini API rate limits and quotas
-- **Scanned PDFs**: Does not support OCR for image-based PDFs
-
-## 🏗️ Architecture
-
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  File Upload    │───▶│  Text Splitter   │───▶│   Embeddings    │
-│  (PDF/TXT)      │    │  (Chunking)      │    │  (Google AI)    │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                                        │
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  Streamlit UI   │◀───│   Chat Chain     │◀───│   FAISS Store   │
-│   (Frontend)    │    │  (LangChain)     │    │ (Vector Search) │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                               │
-                       ┌──────────────────┐
-                       │  Gemini Models   │
-                       │ (Generation AI)  │
-                       └──────────────────┘
-```
-
-## 🐳 Docker Support
-
-### Using Docker Compose (Recommended)
-
-```bash
-# Create .env file with your API key
-echo "GOOGLE_API_KEY=your-api-key-here" > .env
-
-# Start the service
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-```
-
-### Using Docker directly
-
-```bash
-# Build image
-docker build -t document-qa-rag-system .
-
-# Run container
-docker run -p 8501:8501 -e GOOGLE_API_KEY=your_api_key document-qa-rag-system
-```
-
-## 📁 Project Structure
-
-```
-document-rag-assistant/
-│
-├── app.py              # Main Streamlit application
-│
-├── notebooks/
-│   └── rag_demo.ipynb    # Beginner-level RAG notebook demo
-│
-├── data/                   # Sample documents (PDF/TXT)
-|   └── Stack vs Heap Memory.txt
-|   └── FastAPI Modern Python Web Development.pdf
-│
-├── Dockerfile              # Container setup
-├── requirements.txt        # Python dependencies
-├── .env.example            # Example API key file
-├── .gitignore              # Git ignore rules
-└── README.md               # Project documentation
-```
-
-## 📊 Performance Metrics
-
-- **Processing Speed**: ~2-5 seconds for typical documents (10-50 pages)
-- **Memory Usage**: Optimized vector storage with FAISS
-- **Accuracy**: High precision with 4-chunk retrieval system
-- **Container Size**: ~380MB (optimized Docker image)
-- **Response Time**: Sub-second for most queries
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-### Development Setup
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development with Docker
-
-```bash
-# Build development image
-docker build -f Dockerfile.dev -t document-rag-dev .
-
-# Run with live reload
-docker run -p 8501:8501 -v $(pwd):/app document-rag-dev
-```
-
-## 📝 Future Roadmap
-
-- [ ] Support for more document formats (DOCX, HTML, Markdown)
-- [ ] Multi-document conversation capabilities
-- [ ] OCR support for scanned PDFs
-- [ ] Advanced filtering and search options
-- [ ] Integration with cloud storage services (Google Drive, Dropbox)
-- [ ] API endpoint for programmatic access
-- [ ] Batch processing for multiple documents
-- [ ] Custom embedding model options
-- [ ] Multi-language document support
-- [ ] Document summarization features
-
-## 🐛 Known Issues
-
-- Large PDF files (>100MB) may cause memory issues
-- Some complex PDF layouts may not parse correctly
-- API rate limiting may affect performance during peak usage
-- Embedded images in PDFs are not processed
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-**"API key not found" error:**
-- Ensure your Google Gemini API key is correctly set
-- Check that the key has proper permissions
-
-**Document processing fails:**
-- Verify the document format is supported (PDF/TXT)
-- Ensure the file is not corrupted or password-protected
-
-**Slow processing:**
-- Try using a smaller document or different model
-- Check your internet connection
-
-**Out of memory:**
-- Reduce document size or restart the application
-- For Docker: increase memory limits
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Streamlit](https://streamlit.io/) for the amazing web framework
-- [LangChain](https://langchain.com/) for RAG implementation tools
-- [Google AI](https://ai.google.dev/) for Gemini API access
-- [FAISS](https://github.com/facebookresearch/faiss) for efficient vector similarity search
-- [PyPDFLoader](https://python.langchain.com/docs/modules/data_connection/document_loaders/integrations/pypdf) for PDF processing
-
-## 📞 Support
-
-If you encounter any issues or have questions:
-
-- Open an [Issue](https://github.com/ZohaibCodez/document-qa-rag-system/issues)
-- Check existing issues for solutions
-- Review the troubleshooting section above
-- Contact: [itxlevicodez@gmail.com](mailto:itxlevicodez@gmail.com)
-
----
-
-⭐ **Star this repository if you found it helpful!**
-
-Built with 🖤 using Streamlit and Google Gemini AI
+- PDF and plain text files only; scanned PDFs require OCR.
+- Each upload is limited to 100 MB total; upload more files in later batches.
+- Chat history is held in memory for the current server process; indexed document embeddings persist in `chroma_db/`.

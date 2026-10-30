@@ -43,8 +43,8 @@ venv.bak/
 ehthumbs.db
 Thumbs.db
 
-# Streamlit specific
-.streamlit/
+# FastAPI local runtime
+.fastapi/
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -87,6 +87,8 @@ tmp/
 transcript.txt
 *.transcript
 vector_store/
+chroma_db/
+chroma_data/
 *.faiss
 *.pkl
 *.pickle
